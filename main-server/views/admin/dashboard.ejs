@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin 儀表板</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f7f6; margin: 0; color: #333; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #2c3e50; }
+        .logout-btn { padding: 8px 15px; background-color: #e74c3c; color: white; text-decoration: none; border-radius: 5px; }
+        .tabs { display: flex; border-bottom: 2px solid #dee2e6; margin-bottom: 20px; }
+        .tab-link { padding: 10px 20px; cursor: pointer; color: #95a5a6; position: relative; }
+        .tab-link.active { color: #3498db; font-weight: bold; }
+        .tab-link.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background-color: #3498db; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { margin-top: 0; color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+        th { background-color: #ecf0f1; color: #7f8c8d; text-transform: uppercase; font-size: 12px; }
+        .status-dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .online { background-color: #2ecc71; }
+        .offline { background-color: #e74c3c; }
+        .btn { padding: 8px 15px; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
+        .btn-delete { background-color: #e74c3c; }
+        .node-group { margin-bottom: 30px; }
+        .form-inline { display: flex; gap: 10px; align-items: center; }
+        .form-inline input { padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; }
+        .btn-add { background-color: #3498db; }
+        .error-toast { position: fixed; bottom: 20px; right: 20px; background-color: #e74c3c; color: white; padding: 15px; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); z-index: 1000; display: none; opacity: 0; transition: opacity 0.5s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Admin 控制面板</h1>
+            <a href="/admin/logout" class="logout-btn">登出</a>
+        </div>
+
+        <div class="tabs">
+            <div class="tab-link active" onclick="openTab(event, 'nodes')">節點組管理</div>
+            <div class="tab-link" onclick="openTab(event, 'users')">用戶管理</div>
+        </div>
+
+        <!-- 節點管理 -->
+        <div id="nodes" class="tab-content active">
+            <div id="node-groups-container"></div>
+        </div>
+
+        <!-- 用戶管理 -->
+        <div id="users" class="tab-content">
+            <div class="card">
+                <h2>用戶列表</h2>
+                <table>
+                    <thead><tr><th>ID</th><th>Email</th><th>已驗證</th><th>操作</th></tr></thead>
+                    <tbody id="users-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div id="error-toast" class="error-toast"></div>
+
+    <script>
+        function openTab(evt, tabName) {
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.querySelectorAll('.tab-link').forEach(tl => tl.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        const nodeGroupsContainer = document.getElementById('node-groups-container');
+        const errorToast = document.getElementById('error-toast');
+
+        function showErrorToast(message) {
+            errorToast.textContent = message;
+            errorToast.style.display = 'block';
+            errorToast.style.opacity = 1;
+            setTimeout(() => { 
+                errorToast.style.opacity = 0;
+                setTimeout(() => { errorToast.style.display = 'none'; }, 500);
+            }, 5000);
+        }
+
+        async function fetchNodeGroups() {
+            try {
+                const res = await fetch('/api/admin/node_groups');
+                if (!res.ok) throw new Error('無法獲取節點數據');
+                const groups = await res.json();
+                nodeGroupsContainer.innerHTML = '';
+                if (groups.length === 0) {
+                    nodeGroupsContainer.innerHTML = '<div class="card"><p>目前沒有任何代理節點組回報狀態。請啟動您的 proxy-server.js。</p></div>';
+                    return;
+                }
+                groups.forEach(group => {
+                    const lastHeartbeatDate = new Date(group.lastHeartbeat);
+                    const isOnline = (Date.now() - lastHeartbeatDate.getTime()) < 90000;
+                    const statusClass = isOnline ? 'online' : 'offline';
+                    const statusText = isOnline ? '在線' : '離線';
+                    const lastSeen = lastHeartbeatDate.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+
+                    let portsHtml = (group.activePorts || []).map(port => `
+                        <tr>
+                            <td>${port}</td>
+                            <td><button class="btn btn-delete" onclick="controlNode('${group.groupName}', 'stop', ${port})">停止</button></td>
+                        </tr>`).join('');
+
+                    const groupHtml = `
+                        <div class="card node-group">
+                            <h2>
+                                <span class="status-dot ${statusClass}"></span>
+                                ${group.groupName} <small style="color:#95a5a6;font-weight:normal;">(${statusText})</small>
+                            </h2>
+                            <p><strong>公開主機:</strong> ${group.publicHost} | <strong>控制端口:</strong> ${group.controlPort} | <strong>上次心跳:</strong> ${lastSeen}</p>
+                            <h3>活動端口</h3>
+                            <table>
+                                <thead><tr><th>端口</th><th>操作</th></tr></thead>
+                                <tbody>${portsHtml}</tbody>
+                            </table>
+                            <hr style="border:none;border-top:1px solid #ecf0f1;margin:20px 0;">
+                            <h3>新增端口</h3>
+                            <form class="form-inline" onsubmit="controlNode('${group.groupName}', 'start', this.port.value); this.port.value=''; return false;">
+                                <input type="number" name="port" placeholder="新端口號" required>
+                                <button type="submit" class="btn btn-add">啟動新端口</button>
+                            </form>
+                        </div>`;
+                    nodeGroupsContainer.innerHTML += groupHtml;
+                });
+            } catch (error) {
+                showErrorToast(error.message);
+            }
+        }
+
+        async function controlNode(groupName, command, port) {
+            if (!port) return;
+            if (command === 'stop' && !confirm(`確定要在 ${groupName} 上停止端口 ${port} 嗎？`)) return;
+            
+            try {
+                const res = await fetch('/api/admin/control_node', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groupName, command, port: parseInt(port) })
+                });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.message || '指令發送失敗');
+                }
+                setTimeout(fetchNodeGroups, 500);
+            } catch (error) {
+                showErrorToast(error.message);
+            }
+        }
+
+        const usersTableBody = document.getElementById('users-table-body');
+        async function fetchUsers() {
+            try {
+                const res = await fetch('/api/admin/users');
+                if (!res.ok) throw new Error('無法獲取用戶列表');
+                const users = await res.json();
+                usersTableBody.innerHTML = '';
+                users.forEach(user => {
+                    const row = `<tr>
+                        <td>${user.id}</td>
+                        <td>${user.email}</td>
+                        <td>${user.is_verified ? '是' : '否'}</td>
+                        <td><button class="btn btn-delete" onclick="deleteUser(${user.id}, '${user.email}')">刪除</button></td>
+                    </tr>`;
+                    usersTableBody.innerHTML += row;
+                });
+            } catch (error) {
+                showErrorToast(error.message);
+            }
+        }
+
+        async function deleteUser(id, email) {
+            if (!confirm(`確定要刪除用戶 ${email} (ID: ${id}) 嗎？此操作將同時刪除該用戶的所有連線紀錄。`)) return;
+            try {
+                const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('刪除用戶失敗');
+                fetchUsers();
+            } catch (error) {
+                showErrorToast(error.message);
+            }
+        }
+        
+        // --- 初始化 & 定時刷新 ---
+        fetchNodeGroups();
+        fetchUsers();
+        setInterval(fetchNodeGroups, 15000);
+    </script>
+</body>
+</html>

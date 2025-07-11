@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儀表板 - ChunProxy</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/locale/zh-tw.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f8f9fa; margin: 0; padding: 20px; color: #343a40; }
+        .container { max-width: 960px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header h1 { color: #007bff; margin: 0; }
+        .logout-btn { display: inline-block; padding: 8px 15px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9em; }
+        .logout-btn:hover { background-color: #c82333; }
+        .card { background: white; padding: 20px 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+        h2 { color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 0; }
+        p, li { line-height: 1.7; color: #555; }
+        code { background-color: #e9ecef; padding: 3px 6px; border-radius: 4px; font-family: "SF Mono", "Menlo", "Monaco", monospace; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .stat-item { text-align: center; background-color: #f8f9fa; padding: 20px; border-radius: 8px; }
+        .stat-item .value { font-size: 2.5em; font-weight: 600; color: #007bff; }
+        .stat-item .label { font-size: 1em; color: #6c757d; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+        .history-table th, .history-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        .history-table th { background-color: #f8f9fa; font-weight: 600; }
+        .history-table tr:last-child td { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ChunProxy</h1>
+            <a href="/logout" class="logout-btn">登出</a>
+        </div>
+
+        <div class="card">
+            <h2>歡迎回來, <%= email %>!</h2>
+            <p>你的帳號已啟用，可以在此查看你的連線狀態並下載客戶端插件。</p>
+        </div>
+
+        <div class="card">
+            <h2>使用統計</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div id="stats-today" class="value">0</div>
+                    <div class="label">今日連線次數</div>
+                </div>
+                <div class="stat-item">
+                    <div id="stats-total" class="value">0</div>
+                    <div class="label">總連線次數</div>
+                </div>
+                <div class="stat-item">
+                    <div id="stats-last-seen" class="value">N/A</div>
+                    <div class="label">最近一次連線</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>最近 20 次連線紀錄</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>連線時間</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body"></tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>可用代理伺服器</h2>
+            <p>在插件設定中，你可以填寫以下任一伺服器資訊：</p>
+            <ul>
+                <% if (servers && servers.length > 0) { %>
+                    <% servers.forEach(server => { %>
+                        <li><strong><%= server.name %>:</strong> <code>socks5://<%= server.host %>:<%= server.port %></code></li>
+                    <% }) %>
+                <% } else { %>
+                    <li>暫無可用伺服器，請聯繫管理員。</li>
+                <% } %>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Chrome 插件下載與安裝</h2>
+            <ol>
+                <li><strong>下載插件：</strong> <a href="/download/ChunProxy.zip" download>點此下載插件壓縮檔 (ChunProxy.zip)</a></li>
+                <li><strong>解壓縮：</strong> 將下載的 `ChunProxy.zip` 解壓縮到一個你不會刪除的資料夾。</li>
+                <li><strong>打開擴充功能頁面：</strong> 在 Chrome 瀏覽器網址列輸入 <code>chrome://extensions</code> 並前往。</li>
+                <li><strong>啟用開發人員模式：</strong> 在頁面右上角，打開「開發人員模式」的開關。</li>
+                <li><strong>載入插件：</strong> 點擊左上角的「載入未封裝的項目」，然後選擇你剛剛解壓縮出來的那個資料夾。</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        moment.locale('zh-tw');
+        async function fetchData() {
+            try {
+                const [statsRes, historyRes] = await Promise.all([fetch('/api/stats'), fetch('/api/connections')]);
+                if (!statsRes.ok || !historyRes.ok) throw new Error('無法獲取統計數據');
+                const stats = await statsRes.json();
+                const history = await historyRes.json();
+                document.getElementById('stats-today').textContent = stats.todayConnections;
+                document.getElementById('stats-total').textContent = stats.totalConnections;
+                document.getElementById('stats-last-seen').textContent = stats.lastSeen ? moment(stats.lastSeen).fromNow() : '無紀錄';
+                const historyBody = document.getElementById('history-body');
+                historyBody.innerHTML = '';
+                if (history.length > 0) {
+                    history.forEach((conn, index) => {
+                        const row = `<tr><td>${index + 1}</td><td>${moment(conn.timestamp).format('YYYY-MM-DD HH:mm:ss')} (${moment(conn.timestamp).fromNow()})</td></tr>`;
+                        historyBody.innerHTML += row;
+                    });
+                } else {
+                    historyBody.innerHTML = '<tr><td colspan="2" style="text-align:center;">暫無連線紀錄</td></tr>';
+                }
+            } catch (error) {
+                console.error('更新數據時出錯:', error);
+                const historyBody = document.getElementById('history-body');
+                historyBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color: red;">加載數據失敗</td></tr>';
+            }
+        }
+        fetchData();
+        setInterval(fetchData, 30000);
+    </script>
+</body>
+</html>

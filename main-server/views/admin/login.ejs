@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin 登入</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #343a40; }
+        .form-container { background: #495057; padding: 30px 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); width: 320px; color: #f8f9fa; }
+        h2 { text-align: center; color: #17a2b8; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; color: #ced4da; }
+        input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #6c757d; border-radius: 4px; background-color: #343a40; color: #f8f9fa; }
+        button { width: 100%; padding: 12px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #138496; }
+        .error { color: #dc3545; text-align: center; margin-top: 15px; height: 20px; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Admin Panel</h2>
+        <form action="/admin/login" method="POST">
+            <div class="form-group">
+                <label for="username">使用者名稱:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密碼:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">登入</button>
+        </form>
+        <% if (typeof error !== 'undefined' && error) { %>
+            <p class="error"><%= error %></p>
+        <% } %>
+    </div>
+</body>
+</html>

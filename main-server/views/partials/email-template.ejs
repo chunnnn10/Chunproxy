@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { background-color: #007bff; color: #ffffff; padding: 40px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; }
+        .content { padding: 30px 40px; color: #333333; line-height: 1.7; }
+        .content p { margin: 0 0 20px 0; }
+        .button-container { text-align: center; margin: 30px 0; }
+        .button { background-color: #28a745; color: #ffffff; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold; }
+        .footer { background-color: #f4f4f4; color: #888888; text-align: center; padding: 20px; font-size: 12px; }
+        .footer p { margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>歡迎加入 ChunProxy</h1>
+        </div>
+        <div class="content">
+            <p>您好！</p>
+            <p>感謝您註冊 ChunProxy 個人代理服務。請點擊下方的按鈕來驗證您的電子郵箱地址，並啟用您的帳號。</p>
+            <div class="button-container">
+                <a href="<%= verificationLink %>" class="button">驗證我的帳號</a>
+            </div>
+            <p>如果按鈕無法點擊，您也可以複製並在瀏覽器中打開以下連結：</p>
+            <p><a href="<%= verificationLink %>" style="color: #007bff; word-break: break-all;"><%= verificationLink %></a></p>
+            <p>祝您使用愉快！</p>
+        </div>
+        <div class="footer">
+            <p>這是一封自動發送的郵件，請勿直接回覆。</p>
+            <p>&copy; ChunProxy Service</p>
+        </div>
+    </div>
+</body>
+</html>
