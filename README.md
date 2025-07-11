@@ -76,23 +76,23 @@ Chun Proxy 唔係一個普通嘅代理工具，而係一套完整嘅全端解決
 
 #### 1. 主伺服器 (Main Server)
 
-* **部署位置**: 你嘅主伺服器 (e.g., `chun-proxy.archun.site`)
+* **部署位置**: 你嘅主伺服器
 * **步驟**:
     1.  將 `main-server` 資料夾入面嘅所有檔案上傳到你嘅伺服器。
-    2.  建立 `.env` 檔案，並填寫所有必要嘅變數（參考 `env.example`）。
+    2.  建立 `.env` 檔案，並填寫所有必要嘅變數。
     3.  執行 `npm install` 安裝依賴。
     4.  執行 `npm start` 啟動服務。
     5.  確保你嘅防火牆已經開放 Web 服務所需嘅端口 (e.g., 3000)。
 
 #### 2. 代理節點 (Proxy Node)
 
-* **部署位置**: 任何你想用嚟做代理嘅伺服器 (e.g., 德國、香港)。
+* **部署位置**: 任何你想用嚟做代理嘅伺服器。
 * **步驟**:
     1.  將 `proxy-node` 資料夾入面嘅所有檔案上傳到代理伺服器。
-    2.  建立 `.env` 檔案，填寫呢個節點嘅設定，特別係 `MAIN_SERVER_URL` 同 `NODE_SECRET_KEY` (必須同主伺服器一致)。
+    2.  建立 `.env` 檔案，填寫呢個節點嘅設定。
     3.  執行 `npm install` 安裝依賴。
     4.  執行 `npm start` 啟動服務。
-    5.  確保你嘅防火牆已經開放呢個節點嘅代理端口 (e.g., 1080, 1081) 同控制端口 (e.g., 9999)。
+    5.  確保你嘅防火牆已經開放呢個節點嘅代理端口同控制端口。
 
 #### 3. 瀏覽器插件 (Browser Extension)
 
@@ -101,7 +101,29 @@ Chun Proxy 唔係一個普通嘅代理工具，而係一套完整嘅全端解決
     1.  喺 Chrome/Edge 瀏覽器打開 `chrome://extensions`。
     2.  啟用右上角嘅「開發人員模式」。
     3.  點擊「載入未封裝的項目」，然後選擇 `browser-extension` 呢個資料夾。
-    4.  插件圖示會出現喺工具列上。
+
+### ⚙️ 客製化設定 (Configuration)
+
+如果你想部署自己嘅版本，你需要修改以下幾個地方嘅設定：
+
+1.  **主伺服器 `.env`**:
+    * `PUBLIC_HOSTNAME`: 你用嚟訪問網站 UI 嘅域名。
+    * `PROXY_HOSTNAME`: 你用嚟俾插件連接代理服務嘅域名。
+    * `GMAIL_USER`/`GMAIL_APP_PASS`: 你嘅 Gmail 發信設定。
+    * `ADMIN_USER`/`ADMIN_PASS`: 你嘅 Admin 後台帳號密碼。
+    * `NODE_SECRET_KEY`: 用嚟同代理節點通訊嘅密鑰。
+
+2.  **代理節點 `.env`**:
+    * `MAIN_SERVER_URL`: 你主伺服器嘅完整地址 (e.g., `https://chun-proxy.archun.site`)。
+    * `NODE_SECRET_KEY`: 必須同主伺服器嘅設定完全一樣。
+    * `NODE_PUBLIC_HOST`: 呢個代理節點嘅公開域名或 IP。
+    * 其他節點相關設定...
+
+3.  **瀏覽器插件**:
+    * **`browser-extension/popup/popup.js`**:
+        * 修改 `const backendUrl = '...'` 呢一行，將佢指向你主伺服器嘅地址。
+    * **`browser-extension/manifest.json`**:
+        * 修改 `host_permissions`，將入面嘅地址改為你主伺服器嘅地址。
 
 ---
 
@@ -162,23 +184,23 @@ Chun Proxy 並非一個普通的代理工具，而是一套完整的全端解決
 
 #### 1. 主伺服器 (Main Server)
 
-* **部署位置**: 您的主伺服器 (e.g., `chun-proxy.archun.site`)
+* **部署位置**: 您的主伺服器
 * **步驟**:
     1.  將 `main-server` 資料夾內的所有檔案上傳至您的伺服器。
-    2.  建立 `.env` 檔案，並填寫所有必要的變數（參考 `env.example`）。
+    2.  建立 `.env` 檔案，並填寫所有必要的變數。
     3.  執行 `npm install` 安裝依賴。
     4.  執行 `npm start` 啟動服務。
     5.  確保您的防火牆已開放 Web 服務所需的連接埠 (e.g., 3000)。
 
 #### 2. 代理節點 (Proxy Node)
 
-* **部署位置**: 任何您想用作代理的伺服器 (e.g., 德國、香港)。
+* **部署位置**: 任何您想用作代理的伺服器。
 * **步驟**:
     1.  將 `proxy-node` 資料夾內的所有檔案上傳至代理伺服器。
-    2.  建立 `.env` 檔案，填寫此節點的設定，特別是 `MAIN_SERVER_URL` 與 `NODE_SECRET_KEY` (必須與主伺服器一致)。
+    2.  建立 `.env` 檔案，填寫此節點的設定。
     3.  執行 `npm install` 安裝依賴。
     4.  執行 `npm start` 啟動服務。
-    5.  確保您的防火牆已開放此節點的代理連接埠 (e.g., 1080, 1081) 與控制連接埠 (e.g., 9999)。
+    5.  確保您的防火牆已開放此節點的代理連接埠與控制連接埠。
 
 #### 3. 瀏覽器擴充功能 (Browser Extension)
 
@@ -187,7 +209,29 @@ Chun Proxy 並非一個普通的代理工具，而是一套完整的全端解決
     1.  在 Chrome/Edge 瀏覽器中開啟 `chrome://extensions`。
     2.  啟用右上角的「開發人員模式」。
     3.  點擊「載入未封裝的項目」，然後選擇 `browser-extension` 這個資料夾。
-    4.  擴充功能圖示會出現在工具列上。
+
+### ⚙️ 客製化設定 (Configuration)
+
+若您想部署自己的版本，您需要修改以下幾個地方的設定：
+
+1.  **主伺服器 `.env`**:
+    * `PUBLIC_HOSTNAME`: 您用來訪問網站 UI 的域名。
+    * `PROXY_HOSTNAME`: 您用來讓擴充功能連接代理服務的域名。
+    * `GMAIL_USER`/`GMAIL_APP_PASS`: 您的 Gmail 發信設定。
+    * `ADMIN_USER`/`ADMIN_PASS`: 您的 Admin 後台帳號密碼。
+    * `NODE_SECRET_KEY`: 用來與代理節點通訊的密鑰。
+
+2.  **代理節點 `.env`**:
+    * `MAIN_SERVER_URL`: 您主伺服器的完整位址 (e.g., `https://chun-proxy.archun.site`)。
+    * `NODE_SECRET_KEY`: 必須與主伺服器的設定完全一致。
+    * `NODE_PUBLIC_HOST`: 此代理節點的公開域名或 IP。
+    * 其他節點相關設定...
+
+3.  **瀏覽器擴充功能**:
+    * **`browser-extension/popup/popup.js`**:
+        * 修改 `const backendUrl = '...'` 這一行，將其指向您主伺服器的位址。
+    * **`browser-extension/manifest.json`**:
+        * 修改 `host_permissions`，將其中的位址改為您主伺服器的位址。
 
 ---
 
@@ -248,23 +292,23 @@ Chun Proxy 并非一个普通的代理工具，而是一套完整的全栈解决
 
 #### 1. 主服务器 (Main Server)
 
-* **部署位置**: 您的主服务器 (e.g., `chun-proxy.archun.site`)
+* **部署位置**: 您的主服务器
 * **步骤**:
     1.  将 `main-server` 文件夹内的所有文件上传至您的服务器。
-    2.  创建 `.env` 文件，并填写所有必要的变量（参考 `env.example`）。
+    2.  创建 `.env` 文件，并填写所有必要的变量。
     3.  执行 `npm install` 安装依赖。
     4.  执行 `npm start` 启动服务。
     5.  确保您的防火墙已开放 Web 服务所需的端口 (e.g., 3000)。
 
 #### 2. 代理节点 (Proxy Node)
 
-* **部署位置**: 任何您想用作代理的服务器 (e.g., 德国、香港)。
+* **部署位置**: 任何您想用作代理的服务器。
 * **步骤**:
     1.  将 `proxy-node` 文件夹内的所有文件上传至代理服务器。
-    2.  创建 `.env` 文件，填写此节点的设置，特别是 `MAIN_SERVER_URL` 与 `NODE_SECRET_KEY` (必须与主服务器一致)。
+    2.  创建 `.env` 文件，填写此节点的设置。
     3.  执行 `npm install` 安装依赖。
     4.  执行 `npm start` 启动服务。
-    5.  确保您的防火墙已开放此节点的代理端口 (e.g., 1080, 1081) 与控制端口 (e.g., 9999)。
+    5.  确保您的防火墙已开放此节点的代理端口与控制端口。
 
 #### 3. 浏览器扩展 (Browser Extension)
 
@@ -273,7 +317,29 @@ Chun Proxy 并非一个普通的代理工具，而是一套完整的全栈解决
     1.  在 Chrome/Edge 浏览器中打开 `chrome://extensions`。
     2.  启用右上角的“开发人员模式”。
     3.  点击“加载已解压的扩展程序”，然后选择 `browser-extension` 这个文件夹。
-    4.  扩展图标会出现在工具栏上。
+
+### ⚙️ 客制化设定 (Configuration)
+
+若您想部署自己的版本，您需要修改以下几个地方的设定：
+
+1.  **主服务器 `.env`**:
+    * `PUBLIC_HOSTNAME`: 您用来访问网站 UI 的域名。
+    * `PROXY_HOSTNAME`: 您用来让扩展连接代理服务的域名。
+    * `GMAIL_USER`/`GMAIL_APP_PASS`: 您的 Gmail 发信设定。
+    * `ADMIN_USER`/`ADMIN_PASS`: 您的 Admin 后台帐号密码。
+    * `NODE_SECRET_KEY`: 用来与代理节点通讯的密钥。
+
+2.  **代理节点 `.env`**:
+    * `MAIN_SERVER_URL`: 您主服务器的完整地址 (e.g., `https://chun-proxy.archun.site`)。
+    * `NODE_SECRET_KEY`: 必须与主服务器的设定完全一致。
+    * `NODE_PUBLIC_HOST`: 此代理节点的公开域名或 IP。
+    * 其他节点相关设定...
+
+3.  **浏览器扩展**:
+    * **`browser-extension/popup/popup.js`**:
+        * 修改 `const backendUrl = '...'` 这一行，将其指向您主服务器的地址。
+    * **`browser-extension/manifest.json`**:
+        * 修改 `host_permissions`，将其中的地址改为您主服务器的地址。
 
 ---
 
@@ -334,23 +400,23 @@ This project uses a monorepo structure, containing three main parts: `main-serve
 
 #### 1. Main Server
 
-* **Deployment Location**: Your main server (e.g., `chun-proxy.archun.site`)
+* **Deployment Location**: Your main server
 * **Steps**:
     1.  Upload all files from the `main-server` directory to your server.
-    2.  Create a `.env` file and fill in all necessary variables (refer to `env.example`).
+    2.  Create a `.env` file and fill in all necessary variables.
     3.  Run `npm install` to install dependencies.
     4.  Run `npm start` to start the service.
     5.  Ensure your firewall allows traffic to the port required for the web service (e.g., 3000).
 
 #### 2. Proxy Node
 
-* **Deployment Location**: Any server you want to use as a proxy (e.g., Germany, Hong Kong).
+* **Deployment Location**: Any server you want to use as a proxy.
 * **Steps**:
     1.  Upload all files from the `proxy-node` directory to the proxy server.
-    2.  Create a `.env` file and configure the settings for this node, especially `MAIN_SERVER_URL` and `NODE_SECRET_KEY` (which must match the main server's).
+    2.  Create a `.env` file and configure the settings for this node.
     3.  Run `npm install` to install dependencies.
     4.  Run `npm start` to start the service.
-    5.  Ensure your firewall allows traffic to the proxy ports (e.g., 1080, 1081) and the control port (e.g., 9999) for this node.
+    5.  Ensure your firewall allows traffic to the proxy ports and the control port.
 
 #### 3. Browser Extension
 
@@ -359,4 +425,26 @@ This project uses a monorepo structure, containing three main parts: `main-serve
     1.  Open `chrome://extensions` in your Chrome/Edge browser.
     2.  Enable "Developer mode" in the top right corner.
     3.  Click "Load unpacked" and select the `browser-extension` directory.
-    4.  The extension icon will appear in your toolbar.
+
+### ⚙️ Configuration
+
+If you want to deploy your own version, you will need to modify the settings in the following places:
+
+1.  **Main Server `.env`**:
+    * `PUBLIC_HOSTNAME`: The domain name you use to access the web UI.
+    * `PROXY_HOSTNAME`: The domain name you use for the extension to connect to the proxy service.
+    * `GMAIL_USER`/`GMAIL_APP_PASS`: Your Gmail settings for sending emails.
+    * `ADMIN_USER`/`ADMIN_PASS`: Your Admin Panel credentials.
+    * `NODE_SECRET_KEY`: The secret key for communication with proxy nodes.
+
+2.  **Proxy Node `.env`**:
+    * `MAIN_SERVER_URL`: The full URL of your main server (e.g., `https://chun-proxy.archun.site`).
+    * `NODE_SECRET_KEY`: Must be identical to the one on the main server.
+    * `NODE_PUBLIC_HOST`: The public domain name or IP of this proxy node.
+    * Other node-related settings...
+
+3.  **Browser Extension**:
+    * **`browser-extension/popup/popup.js`**:
+        * Modify the line `const backendUrl = '...'` to point to your main server's URL.
+    * **`browser-extension/manifest.json`**:
+        * Modify `host_permissions` to include your main server's URL.
